@@ -92,7 +92,7 @@ void TollgateScene::onTouchEnded(Touch* touch, Event* event)
 	int offRealY = realY - nextProjectile->getPosition().y;
 	float length = sqrtf((offRealX*offRealX) + (offRealY*offRealY));
 	float velocity = 960 / 1; // 960pixels/1sec
-	float realMoveDuration = length / velocity;
+	//float realMoveDuration = length / velocity;
 
 	// Determine angle to face
 	float angleRadians = atanf((float)offRealY / (float)offRealX);
@@ -109,7 +109,13 @@ void TollgateScene::onTouchEnded(Touch* touch, Event* event)
 
 
 	ccBezierConfig bezierConfig = battery->setBezierTrack(touchPoint,nextProjectile);
-	BezierTo* bezierTo = BezierTo::create(realMoveDuration, bezierConfig);
+	//BezierTo* bezierTo = BezierTo::create(realMoveDuration, bezierConfig);
+
+	float duration;
+	battery->setShellSpeed(300.0f);//设置炮弹速度
+	duration = 2 * (touchPoint.x - nextProjectile->getPositionX()) / battery->getShellSpeed();//炮弹飞行时间
+
+	BezierTo* bezierTo = BezierTo::create(duration, bezierConfig);
 
 	//炮弹发射
 	nextProjectile->runAction(

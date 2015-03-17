@@ -18,6 +18,12 @@ public:
 
 public:
 	ccBezierConfig setBezierTrack(Point, Sprite*);//设置炮弹轨迹（贝塞尔曲线）
+
+	void setShellSpeed(float);//设置炮弹速度
+	float getShellSpeed() const;//获取炮弹速度
+
+private:
+	float shellSpeed;//炮弹速度
 };
 
 #endif
