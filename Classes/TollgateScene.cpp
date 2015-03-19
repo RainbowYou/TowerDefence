@@ -28,16 +28,15 @@ bool TollgateScene::init()
 	battery = Battery::create();
 	battery->bindWeaponSprite(sprite);
 	battery->setPosition(Point(battery->getContentSize().width / 2 + 25, visibleSize.height / 2));
-	this->addChild(battery);
+	this->addChild(battery,1);
 
 	nextProjectile = NULL;
 
-#if 0
-	ControlLayer* controlLayer = ControlLayer::create();
-	controlLayer->setBattery(battery);
-
-	this->addChild(controlLayer);//向场景中添加控制层
-#endif
+	//背景图片
+	Sprite* bgSprite = Sprite::create("Qintomb_map_bg_r.png");
+	bgSprite->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+	bgSprite->setScale(3, 3);//改变背景图层大小
+	this->addChild(bgSprite, 0);
 
 	return true;
 }
