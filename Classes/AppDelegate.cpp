@@ -1,5 +1,5 @@
 #include "AppDelegate.h"
-#include"TollgateScene.h"
+#include"GameScene.h"
 
 USING_NS_CC;
 
@@ -16,11 +16,11 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto director = Director::getInstance();
     auto glview = director->getOpenGLView();
     if(!glview) {
-        glview = GLView::create("My Game");
-		glview->setFrameSize(1000,700);
+        glview = GLView::create("Tower Defense");
+		glview->setFrameSize(1000,680);
         director->setOpenGLView(glview);
 
-		glview->setDesignResolutionSize(800, 600, kResolutionNoBorder);//ÆÁÄ»ÊÊÅä
+		glview->setDesignResolutionSize(1000, 680, kResolutionNoBorder);//ÆÁÄ»ÊÊÅä
     }
 
     // turn on display FPS
@@ -31,7 +31,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     // create a scene. it's an autorelease object
     //auto scene = HelloWorld::createScene();
-	auto scene = TollgateScene::createScene();
+	auto scene = GameScene::createScene();
     // run
     director->runWithScene(scene);
 

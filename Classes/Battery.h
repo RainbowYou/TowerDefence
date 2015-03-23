@@ -13,9 +13,6 @@ public:
 	CREATE_FUNC(Battery);
 	virtual bool init();
 
-	void setBatteryPosition(int,int);//设置炮台位置
-	Point getBatteryPosition() const;//获取炮台位置
-
 public:
 	ccBezierConfig setBezierTrack(Point, Sprite*);//设置炮弹轨迹（贝塞尔曲线）
 
