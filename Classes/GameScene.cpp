@@ -1,5 +1,8 @@
 #include"GameScene.h"
 #include"Battery.h"
+#include<fstream>
+#include<iostream>
+using namespace std;
 using namespace cocos2d;
 
 
@@ -21,14 +24,44 @@ bool GameScene::init()
 	if (!LayerColor::initWithColor(Color4B(255, 255, 255, 255)))
 		return false;
 
+
 	addBackground();//添加背景
 
 	addTower();//添加塔
 
-	addBattery();//添加炮台
+	//addBattery();//添加炮台
+#if READ_ROUTE
+	readData();
+#endif
+
+	//this->schedule(schedule_selector())
+	//创建怪物管理器
+	monsterMgr = MonsterManager::create();
+	monsterMgr->setMonsterPosList(routeArray);
+	this->addChild(monsterMgr);
 
 	return true;
 }
+
+#if READ_ROUTE
+void GameScene::readData()
+{
+	fstream routeFile("route.txt", ios::in);
+
+	if (!routeFile)
+	{
+		cerr << "File could not be opened!" << endl;
+		exit(1);
+	}
+
+	Point routePoint;
+	while (routeFile >> routePoint.x >> routePoint.y)
+	{
+		routeArray.push_back(routePoint);
+	}
+
+}
+#endif
 
 
 
@@ -90,6 +123,7 @@ void GameScene::onEnter()
 
 void GameScene::onTouchEnded(Touch* touch, Event* event)
 {
+#if 0
 	if (NULL != nextProjectile) return;
 
 	// Choose touch to work with
@@ -104,7 +138,7 @@ void GameScene::onTouchEnded(Touch* touch, Event* event)
 	// Add to projectiles vector
 	projectiles.pushBack(nextProjectile);
 
-#if 0
+
 	// Determine offset of location to projectile
 	int offX = touchPoint.x - nextProjectile->getPosition().x;
 	int offY = touchPoint.y - nextProjectile->getPosition().y;
@@ -140,7 +174,7 @@ void GameScene::onTouchEnded(Touch* touch, Event* event)
 		RotateTo::create(rotateDuration, cocosAngle),
 		CallFuncN::create(CC_CALLBACK_0(GameScene::finishShoot, this)),
 		NULL));
-#endif
+
 
 	float duration, coeffcient;
 
@@ -162,6 +196,25 @@ void GameScene::onTouchEnded(Touch* touch, Event* event)
 		NULL));
 
 	nextProjectile = NULL;
+#endif
+
+#if WRITE_ROUTE
+	fstream routeFstream("route.txt", ios::app);
+
+	if (!routeFstream)
+	{
+		cerr << "File could not be opened" << endl;
+		exit(1);
+	}
+
+	Point point;
+	point.x = touch->getLocation().x;
+	point.y = touch->getLocation().y;
+
+	routeFstream << point.x << ' '<< point.y << endl;
+
+	routeFstream.close();
+#endif
 }
 
 
