@@ -32,13 +32,18 @@ bool GameScene::init()
 	//addBattery();//添加炮台
 #if READ_ROUTE
 	readData();
-#endif
 
-	//this->schedule(schedule_selector())
 	//创建怪物管理器
 	monsterMgr = MonsterManager::create();
 	monsterMgr->setMonsterPosList(routeArray);
 	this->addChild(monsterMgr);
+#endif
+
+	addPhysicWorld();//添加物理世界
+
+	addGround();
+
+	this->scheduleUpdate();
 
 	return true;
 }
@@ -46,7 +51,7 @@ bool GameScene::init()
 #if READ_ROUTE
 void GameScene::readData()
 {
-	fstream routeFile("route.txt", ios::in);
+	fstream routeFile("Message/route.txt", ios::in);
 
 	if (!routeFile)
 	{
@@ -64,13 +69,61 @@ void GameScene::readData()
 #endif
 
 
+void GameScene::addPhysicWorld()
+{
+	//物理世界的重力
+	b2Vec2 gravity;
+	gravity.Set(0.0f, -10.0f);
+
+	//创建物理世界
+	gameWorld = new b2World(gravity);
+}
+
+
+void GameScene::addGround()
+{
+	Size size = Director::getInstance()->getVisibleSize();
+
+	float32 RATIO = size.width / 10 ;//物理世界和游戏世界坐标转换比例
+
+	b2BodyDef groundBodyDef;
+	groundBodyDef.type = b2_staticBody;//地面为静态
+	groundBodyDef.position = b2Vec2(0.0f,0.0f);
+
+	groundBody = gameWorld->CreateBody(&groundBodyDef);
+	
+	//地面多边形
+	b2Vec2 verticles[10];
+	int i = 0;
+	for (auto pos : routeArray)
+	{//遍历地面顶点
+		verticles[i].Set(pos.x / RATIO, pos.y / RATIO);
+		i++;
+	}
+
+	
+	verticles[i].Set(size.width / RATIO, size.height / RATIO);//窗口右上角
+	verticles[i + 1].Set(0, size.height / RATIO);//窗口左上角
+
+	b2PolygonShape polygonShape;
+	polygonShape.Set(verticles, i);
+
+	b2FixtureDef fixtureDef;
+	fixtureDef.shape = &polygonShape;
+	fixtureDef.density = 0;//设置密度
+
+
+	//设置地面的框架
+	groundBody->CreateFixture(&fixtureDef);
+}
+
 
 void GameScene::addBattery()
 {
 	Point pos = tower->getPosition();
 
 	//创建炮台精灵
-	Sprite* sprite = Sprite::create("battery.png");
+	Sprite* sprite = Sprite::create("Battery/battery.png");
 	battery = Battery::create();
 	battery->bindWeaponSprite(sprite);
 	battery->setPosition(Point(pos.x - 120, pos.y + 10));
@@ -86,7 +139,7 @@ void GameScene::addBackground()
 	Size visibleSize = Director::getInstance()->getVisibleSize();
 
 	//背景图片
-	Sprite* bgSprite = Sprite::create("background1.png");
+	Sprite* bgSprite = Sprite::create("Background/background1.png");
 	bgSprite->setPosition(visibleSize.width / 2, visibleSize.height / 2);
 	this->addChild(bgSprite, 0);
 }
@@ -96,11 +149,42 @@ void GameScene::addTower()
 {
 	Size visibleSize = Director::getInstance()->getVisibleSize();
 
-	tower = Sprite::create("Tower.png");
+	tower = Sprite::create("Tower/Tower.png");
 	tower->setPosition(visibleSize.width - 50 , visibleSize.height / 2 + 130);
 	tower->setScale(1.4, 1.6);
 
 	this->addChild(tower);
+}
+
+
+void GameScene::update(float dt)
+{
+	Size size = Director::getInstance()->getVisibleSize();
+
+	float32 RATIO = size.width / 10;
+
+	// 时间步，频率
+	float32 timeStep = dt;
+	//速度迭代,官方文档建议是8
+	int32 velocityIteration = 8;
+	//位置迭代次数，官方文档建议是3
+	int32 positionIteration = 3;
+	//驱动函数
+	gameWorld->Step(timeStep, velocityIteration, positionIteration);
+
+	Sprite* s;
+	for (b2Body* b = gameWorld->GetBodyList(); b; b = b->GetNext())
+	{
+		if (b->GetType() == b2_dynamicBody)
+		{
+			if (b->GetUserData())
+			{
+				s = (Sprite*)b->GetUserData();
+				s->setPosition(b->GetPosition().x*RATIO, b->GetPosition().y*RATIO);
+
+			}
+		}
+	}
 }
 
 
@@ -199,7 +283,7 @@ void GameScene::onTouchEnded(Touch* touch, Event* event)
 #endif
 
 #if WRITE_ROUTE
-	fstream routeFstream("route.txt", ios::app);
+	fstream routeFstream("Message/route.txt", ios::app);
 
 	if (!routeFstream)
 	{
@@ -215,6 +299,53 @@ void GameScene::onTouchEnded(Touch* touch, Event* event)
 
 	routeFstream.close();
 #endif
+
+	shoot(SHOOT_PARTICLE);
+}
+
+
+void GameScene::shoot(int shootMode)
+{
+	Size size = Director::getInstance()->getVisibleSize();
+
+	float32 RATIO = size.width / 10;
+	Point pos = tower->getPosition();
+
+	b2BodyDef shellBodyDef;
+	shellBodyDef.position.Set(pos.x/RATIO,(pos.y+70)/RATIO);
+	shellBodyDef.type = b2_dynamicBody;
+	shellBodyDef.linearVelocity = b2Vec2(-4.0f, 0.0f);//炮弹速度
+
+
+	b2Body* shellBody;
+	shellBody = gameWorld->CreateBody(&shellBodyDef);
+
+	b2PolygonShape circle;
+	circle.SetAsBox(25 / (2 * RATIO), 25 / (2 * RATIO));
+
+	b2FixtureDef shellFixture;
+	shellFixture.density = 1;
+	shellFixture.shape = &circle;
+	shellFixture.restitution = 0;//不设置炮弹反弹
+
+	shellBody->CreateFixture(&shellFixture);
+
+	Sprite* shellSprite;
+	if (shootMode == SHOOT_NORMAL)
+	{
+		shellSprite = Sprite::create("Shell/shell.png");
+	}
+
+	else
+	{
+		shellSprite = Sprite::create("Shell/hong.png");
+	}
+
+
+	shellSprite->setPosition(Point(pos.x, pos.y + 70));
+	this->addChild(shellSprite);
+
+	shellBody->SetUserData(shellSprite);
 }
 
 

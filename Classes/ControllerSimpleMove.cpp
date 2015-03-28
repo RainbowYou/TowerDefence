@@ -64,7 +64,7 @@ void ControllerSimpleMove::moveOneStep()
 	if (sprite != NULL)
 	{
 		Point entityPos = mEntity->getPosition();
-		Point curDestPos = curDestPos;
+		//Point curDestPos = curDestPos;
 
 		//取得下一个移动坐标点
 		entityPos = getNextPos(entityPos, curDestPos);
@@ -105,7 +105,11 @@ void ControllerSimpleMove::moveByPosList(std::vector<Point> posList)
 	}
 
 	this->movePosList.clear();
-	this->movePosList.push_back(posList.at(0));
+	//this->movePosList.push_back(posList.at(0));
+	for (auto pos : posList)
+	{
+		this->movePosList.push_back(pos);
+	}
 
 	nextMovePos();
 

@@ -107,6 +107,8 @@ void MonsterManager::showMonster(float dt)
 			monster->setVisible(true);
 			
 			monster->moveByPosList(monsterPosList);
+
+			//monsterPosList.erase(monsterPosList.begin());//删除引用完的坐标值
 		}
 	}
 
@@ -114,6 +116,8 @@ void MonsterManager::showMonster(float dt)
 	{
 		notShowMonsterList.eraseObject(monster);
 	}
+	
+	
 }
 
 
